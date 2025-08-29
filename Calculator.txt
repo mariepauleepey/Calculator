@@ -1,0 +1,576 @@
+import React, { useState } from 'react';
+import { Calculator, DollarSign, TrendingUp, Target, Users, PieChart, BarChart3, Zap, Download, Star } from 'lucide-react';
+
+export default function BusinessCalculatorSuite() {
+  const [activeCalculator, setActiveCalculator] = useState('roi');
+  const [results, setResults] = useState({});
+
+  // ROI Calculator State
+  const [roiData, setRoiData] = useState({
+    investment: '',
+    revenue: '',
+    expenses: '',
+    timeframe: '12'
+  });
+
+  // Break-Even Calculator State
+  const [breakEvenData, setBreakEvenData] = useState({
+    fixedCosts: '',
+    variableCost: '',
+    sellingPrice: ''
+  });
+
+  // Profit Margin Calculator State
+  const [marginData, setMarginData] = useState({
+    revenue: '',
+    cogs: ''
+  });
+
+  // Customer Lifetime Value Calculator State
+  const [clvData, setClvData] = useState({
+    avgOrderValue: '',
+    purchaseFreq: '',
+    customerLifespan: ''
+  });
+
+  // Pricing Calculator State
+  const [pricingData, setPricingData] = useState({
+    cost: '',
+    desiredMargin: '30'
+  });
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const calculateROI = () => {
+    const investment = parseFloat(roiData.investment) || 0;
+    const revenue = parseFloat(roiData.revenue) || 0;
+    const expenses = parseFloat(roiData.expenses) || 0;
+    const months = parseInt(roiData.timeframe) || 12;
+
+    const monthlyProfit = revenue - expenses;
+    const totalProfit = monthlyProfit * months;
+    const netProfit = totalProfit - investment;
+    const roi = investment > 0 ? ((netProfit / investment) * 100) : 0;
+    const paybackPeriod = monthlyProfit > 0 ? (investment / monthlyProfit) : 0;
+
+    setResults({
+      ...results,
+      roi: {
+        monthlyProfit,
+        netProfit,
+        roi,
+        paybackPeriod: paybackPeriod.toFixed(1)
+      }
+    });
+  };
+
+  const calculateBreakEven = () => {
+    const fixed = parseFloat(breakEvenData.fixedCosts) || 0;
+    const variable = parseFloat(breakEvenData.variableCost) || 0;
+    const price = parseFloat(breakEvenData.sellingPrice) || 0;
+
+    const contributionMargin = price - variable;
+    const breakEvenUnits = contributionMargin > 0 ? (fixed / contributionMargin) : 0;
+    const breakEvenRevenue = breakEvenUnits * price;
+
+    setResults({
+      ...results,
+      breakEven: {
+        units: Math.ceil(breakEvenUnits),
+        revenue: breakEvenRevenue,
+        contributionMargin
+      }
+    });
+  };
+
+  const calculateMargin = () => {
+    const revenue = parseFloat(marginData.revenue) || 0;
+    const cogs = parseFloat(marginData.cogs) || 0;
+
+    const grossProfit = revenue - cogs;
+    const grossMargin = revenue > 0 ? ((grossProfit / revenue) * 100) : 0;
+
+    setResults({
+      ...results,
+      margin: {
+        grossProfit,
+        grossMargin: grossMargin.toFixed(1)
+      }
+    });
+  };
+
+  const calculateCLV = () => {
+    const orderValue = parseFloat(clvData.avgOrderValue) || 0;
+    const frequency = parseFloat(clvData.purchaseFreq) || 0;
+    const lifespan = parseFloat(clvData.customerLifespan) || 0;
+
+    const clv = orderValue * frequency * lifespan;
+
+    setResults({
+      ...results,
+      clv: {
+        value: clv
+      }
+    });
+  };
+
+  const calculatePricing = () => {
+    const cost = parseFloat(pricingData.cost) || 0;
+    const margin = parseFloat(pricingData.desiredMargin) || 0;
+
+    const price = cost / (1 - (margin / 100));
+    const profit = price - cost;
+
+    setResults({
+      ...results,
+      pricing: {
+        suggestedPrice: price,
+        profit
+      }
+    });
+  };
+
+  const calculators = [
+    { id: 'roi', name: 'ROI Calculator', icon: TrendingUp, color: 'blue' },
+    { id: 'breakeven', name: 'Break-Even Analysis', icon: Target, color: 'green' },
+    { id: 'margin', name: 'Profit Margin', icon: PieChart, color: 'purple' },
+    { id: 'clv', name: 'Customer LTV', icon: Users, color: 'orange' },
+    { id: 'pricing', name: 'Pricing Strategy', icon: DollarSign, color: 'red' }
+  ];
+
+  const renderCalculator = () => {
+    switch (activeCalculator) {
+      case 'roi':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">ROI Calculator</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Initial Investment ($)"
+                  value={roiData.investment}
+                  onChange={(e) => setRoiData({...roiData, investment: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Monthly Revenue ($)"
+                  value={roiData.revenue}
+                  onChange={(e) => setRoiData({...roiData, revenue: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Monthly Expenses ($)"
+                  value={roiData.expenses}
+                  onChange={(e) => setRoiData({...roiData, expenses: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  value={roiData.timeframe}
+                  onChange={(e) => setRoiData({...roiData, timeframe: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="6">6 months</option>
+                  <option value="12">12 months</option>
+                  <option value="24">24 months</option>
+                </select>
+                <button
+                  onClick={calculateROI}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Calculate ROI
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                {results.roi ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">{results.roi.roi.toFixed(1)}%</div>
+                      <div className="text-gray-600">Return on Investment</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Monthly Profit:</span>
+                        <span className="font-semibold">{formatCurrency(results.roi.monthlyProfit)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Net Profit:</span>
+                        <span className="font-semibold">{formatCurrency(results.roi.netProfit)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Payback Period:</span>
+                        <span className="font-semibold">{results.roi.paybackPeriod} months</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <Calculator className="w-12 h-12 mx-auto mb-2" />
+                    <p>Enter values to calculate ROI</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'breakeven':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">Break-Even Analysis</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Fixed Costs ($)"
+                  value={breakEvenData.fixedCosts}
+                  onChange={(e) => setBreakEvenData({...breakEvenData, fixedCosts: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Variable Cost per Unit ($)"
+                  value={breakEvenData.variableCost}
+                  onChange={(e) => setBreakEvenData({...breakEvenData, variableCost: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Selling Price per Unit ($)"
+                  value={breakEvenData.sellingPrice}
+                  onChange={(e) => setBreakEvenData({...breakEvenData, sellingPrice: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                />
+                <button
+                  onClick={calculateBreakEven}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Calculate Break-Even
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                {results.breakEven ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">{results.breakEven.units}</div>
+                      <div className="text-gray-600">Units to Break Even</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Break-Even Revenue:</span>
+                        <span className="font-semibold">{formatCurrency(results.breakEven.revenue)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Contribution Margin:</span>
+                        <span className="font-semibold">{formatCurrency(results.breakEven.contributionMargin)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <Target className="w-12 h-12 mx-auto mb-2" />
+                    <p>Enter values to calculate break-even point</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'margin':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">Profit Margin Calculator</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Total Revenue ($)"
+                  value={marginData.revenue}
+                  onChange={(e) => setMarginData({...marginData, revenue: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Cost of Goods Sold ($)"
+                  value={marginData.cogs}
+                  onChange={(e) => setMarginData({...marginData, cogs: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                />
+                <button
+                  onClick={calculateMargin}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Calculate Margin
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                {results.margin ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-600">{results.margin.grossMargin}%</div>
+                      <div className="text-gray-600">Gross Profit Margin</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Gross Profit:</span>
+                        <span className="font-semibold">{formatCurrency(results.margin.grossProfit)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <PieChart className="w-12 h-12 mx-auto mb-2" />
+                    <p>Enter values to calculate margins</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'clv':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">Customer Lifetime Value</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Average Order Value ($)"
+                  value={clvData.avgOrderValue}
+                  onChange={(e) => setClvData({...clvData, avgOrderValue: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Purchase Frequency (per year)"
+                  value={clvData.purchaseFreq}
+                  onChange={(e) => setClvData({...clvData, purchaseFreq: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Customer Lifespan (years)"
+                  value={clvData.customerLifespan}
+                  onChange={(e) => setClvData({...clvData, customerLifespan: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                />
+                <button
+                  onClick={calculateCLV}
+                  className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Calculate CLV
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                {results.clv ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-orange-600">{formatCurrency(results.clv.value)}</div>
+                      <div className="text-gray-600">Customer Lifetime Value</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <Users className="w-12 h-12 mx-auto mb-2" />
+                    <p>Enter values to calculate CLV</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'pricing':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold">Pricing Strategy Calculator</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Product Cost ($)"
+                  value={pricingData.cost}
+                  onChange={(e) => setPricingData({...pricingData, cost: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                />
+                <select
+                  value={pricingData.desiredMargin}
+                  onChange={(e) => setPricingData({...pricingData, desiredMargin: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="20">20% Profit Margin</option>
+                  <option value="30">30% Profit Margin</option>
+                  <option value="40">40% Profit Margin</option>
+                  <option value="50">50% Profit Margin</option>
+                  <option value="100">100% Profit Margin</option>
+                </select>
+                <button
+                  onClick={calculatePricing}
+                  className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Calculate Price
+                </button>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                {results.pricing ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-red-600">{formatCurrency(results.pricing.suggestedPrice)}</div>
+                      <div className="text-gray-600">Suggested Selling Price</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Profit per Unit:</span>
+                        <span className="font-semibold">{formatCurrency(results.pricing.profit)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <DollarSign className="w-12 h-12 mx-auto mb-2" />
+                    <p>Enter values to calculate pricing</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <Calculator className="w-10 h-10" />
+                <h1 className="text-4xl font-bold">Business Calculator Suite Pro</h1>
+              </div>
+              <p className="text-blue-100 text-lg">
+                Complete financial analysis toolkit for smart business decisions
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                <div className="text-2xl font-bold">$297</div>
+                <div className="text-sm text-blue-100">One-time purchase</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Calculator Navigation */}
+        <div className="bg-gray-50 border-b p-6">
+          <div className="flex flex-wrap gap-4">
+            {calculators.map((calc) => {
+              const IconComponent = calc.icon;
+              return (
+                <button
+                  key={calc.id}
+                  onClick={() => setActiveCalculator(calc.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    activeCalculator === calc.id
+                      ? `bg-${calc.color}-600 text-white shadow-lg`
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  {calc.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Main Calculator Area */}
+        <div className="p-8">
+          {renderCalculator()}
+        </div>
+
+        {/* Features Section */}
+        <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-8 border-t">
+          <h2 className="text-2xl font-bold text-center mb-8">What's Included</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <BarChart3 className="w-8 h-8 text-blue-600 mb-4" />
+              <h3 className="font-semibold text-lg mb-2">5 Essential Calculators</h3>
+              <p className="text-gray-600">ROI, Break-Even, Profit Margins, Customer LTV, and Pricing Strategy tools</p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <Download className="w-8 h-8 text-green-600 mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Export Reports</h3>
+              <p className="text-gray-600">Download professional PDF reports to share with stakeholders</p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <Zap className="w-8 h-8 text-purple-600 mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Instant Results</h3>
+              <p className="text-gray-600">Get immediate calculations with detailed breakdowns and insights</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="p-8 bg-white">
+          <h2 className="text-2xl font-bold text-center mb-8">What Business Owners Say</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                {[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
+              </div>
+              <p className="text-gray-700 mb-4">"These calculators saved me hours of Excel work. The ROI calculator alone paid for itself on the first project."</p>
+              <div className="font-semibold">Sarah Chen, Marketing Agency Owner</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                {[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
+              </div>
+              <p className="text-gray-700 mb-4">"Perfect for quick client presentations. The break-even analysis helped us secure a $50K investment."</p>
+              <div className="font-semibold">Michael Rodriguez, Startup Founder</div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white text-center">
+          <h2 className="text-3xl font-bold mb-4">Get Your Business Calculator Suite Today</h2>
+          <p className="text-xl text-blue-100 mb-6">Make smarter business decisions with professional financial analysis tools</p>
+          <div className="flex items-center justify-center gap-8 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">$297</div>
+              <div className="text-blue-100">One-time purchase</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">Lifetime</div>
+              <div className="text-blue-100">Updates included</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">30-Day</div>
+              <div className="text-blue-100">Money-back guarantee</div>
+            </div>
+          </div>
+          <button className="bg-white text-blue-600 px-8 py-4 rounded-lg text-xl font-bold hover:bg-gray-100 transition-colors">
+            Get Instant Access Now
+          </button>
+          <p className="text-sm text-blue-100 mt-4">✓ Instant download ✓ No monthly fees ✓ Commercial license included</p>
+        </div>
+      </div>
+    </div>
+  );
+}
